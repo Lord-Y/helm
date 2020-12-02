@@ -143,12 +143,6 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .existingClaim }}
       {{- end }}
-      {{- if .Values.storage.nfs.enabled }}
-      - name: nfs-mount
-        nfs:
-          server: "{{ .Values.storage.nfs.server }}"
-          path: "{{ .Values.storage.nfs.path }}"
-      {{- end }}
       {{- if .Values.configMaps.enabled }}
       - name: {{ include "versions.name" . }}
         configMap:

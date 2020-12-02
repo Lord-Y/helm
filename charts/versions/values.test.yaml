@@ -145,12 +145,6 @@ readinessProbe:
 env:
   APP_PORT: *cport
 
-storage:
-  nfs:
-    enabled: true
-    server: test.plop.com
-    path: /nfs
-
 configMaps:
   enabled: true
   path: /config

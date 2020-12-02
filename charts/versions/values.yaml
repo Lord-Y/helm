@@ -126,12 +126,6 @@ readinessProbe:
 env: {}
   #APP_PORT: *cport
 
-storage:
-  nfs:
-    enabled: false
-    server: 
-    path: 
-
 configMaps:
   enabled: false
   path: /config
