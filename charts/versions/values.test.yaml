@@ -1,0 +1,217 @@
+revisionHistoryLimit: 3
+replicaCount: 1
+hpa:
+  minReplicas: 1
+  maxReplicas: 1
+  type: cpu
+  metrics:
+    utilization:
+      cpu: 50
+      memory: 50
+      packetsPerSecond: 500
+      requestsPerSecond: 1k
+
+image:
+  repository: nginx
+  tag: stable
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name:
+
+service:
+  type: ClusterIP
+  port: 80
+  annotations:
+    a: b
+    c: d
+  clusterIP: "" # only here to fix msg spec.clusterIP: Invalid value: "": field is immutable
+  loadBalancerIP: 1.1.1.1
+
+securityContext:
+  # capabilities:
+  #   drop:
+  #   - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+
+pod:
+  securityContext:
+    fsGroup: 2000
+  annotations:
+    a: b
+    c: d
+
+apptype: golang
+
+ingress:
+  nginx:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    path: /
+    hosts:
+    - chart-example.local
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  gce:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    path: /
+    hosts:
+    - chart-example.local
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+resources:
+  limits:
+   cpu: 100m
+   memory: 128Mi
+  requests:
+   cpu: 100m
+   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations:
+- key: "key"
+  operator: "Equal"
+  value: "value"
+  effect: "NoSchedule"
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app: test
+        topologyKey: kubernetes.io/hostname
+      weight: 1
+
+lifecycle:
+  # dummy preStop command
+  preStop:
+    exec:
+      # SIGTERM triggers a quick exit; gracefully terminate instead
+      command: ["/usr/sbin/nginx","-s","quit"]
+
+terminationGracePeriodSeconds: 120
+
+container:
+  namePrefix: "test-"
+  port: &cport 80
+
+livenessProbe:
+  custom:
+    failureThreshold: 3
+    exec:
+      command:
+      - ls
+      - /app/dist
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+
+readinessProbe:
+  custom:
+    failureThreshold: 3
+    exec:
+      command:
+      - ls
+      - /app/dist
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+  
+env:
+  APP_PORT: *cport
+
+storage:
+  nfs:
+    enabled: true
+    server: test.plop.com
+    path: /nfs
+
+configMaps:
+  enabled: true
+  path: /config
+  contents: |-
+    plop.yaml: |-
+      a: b
+
+extraConfigmapMounts:
+- name: certs-configmap
+  mountPath: /etc/grafana/ssl/
+  configMap: certs-configmap
+  readOnly: true
+
+extraSecretMounts:
+- name: secret-files
+  mountPath: /etc/secrets
+  secretName: grafana-secret-files
+  defaultMode: 256 # (optional)
+  readOnly: true
+
+extraVolumeMounts:
+- name: extra-volume
+  mountPath: /mnt/volume
+  readOnly: true
+  existingClaim: volume-claim
+
+extraInitContainers:
+- name: proxy
+  image: quay.io/gambol99/keycloak-proxy:latest
+  args:
+  - -provider=github
+  - -upstream-url=http://127.0.0.1:3000
+  ports:
+  - name: proxy-web
+    containerPort: 4181
+
+extraContainers:
+- name: proxy
+  image: quay.io/gambol99/keycloak-proxy:latest
+  args:
+  - -provider=github
+  - -upstream-url=http://127.0.0.1:3000
+  ports:
+  - name: proxy-web
+    containerPort: 4181
+
+metrics:
+  serviceMonitor:
+    interval: 15s
+    svc:
+      enabled: true
+    app:
+      enabled: true
+      path: /metrics
+      port: 9101
+
+redis:
+  enabled: false
+
+mariadb:
+  enabled: false
+
+postgresql-ha:
+  enabled: false

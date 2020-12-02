@@ -1,0 +1,22 @@
+{{- if .Values.metrics.serviceMonitor.svc.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "versions.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "versions.labels" . | nindent 4 }}
+    app: {{ include "versions.name" . }}
+{{- with .Values.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  selector:
+    matchLabels:
+    {{- include "versions.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.metrics.serviceMonitor.interval }}
+    path: {{ .Values.metrics.serviceMonitor.app.path }}
+{{- end }}

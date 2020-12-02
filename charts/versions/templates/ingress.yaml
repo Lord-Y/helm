@@ -1,0 +1,60 @@
+{{- if .Values.ingress.nginx.enabled -}}
+{{- $fullName := include "versions.fullname" . -}}
+{{- $ingressPath := .Values.ingress.nginx.path -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "versions.name" . }}
+    helm.sh/chart: {{ include "versions.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.ingress.nginx.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.ingress.nginx.tls }}
+  tls:
+  {{- range .Values.ingress.nginx.tls -}}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end -}}
+{{- end }}
+  rules:
+  {{- range .Values.ingress.nginx.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
+  {{- end -}}
+{{- end -}}
+
+{{- if .Values.ingress.gce.enabled -}}
+{{- $fullName := include "versions.fullname" . -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ .Release.Namespace }}
+{{- with .Values.ingress.gce.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  {{- if .Values.ingress.gce.tls -}}
+  tls:
+      secretName: {{ .secretName }}
+  {{- end }}
+  backend:
+    serviceName: {{ $fullName }}
+    servicePort: http
+{{- end -}}

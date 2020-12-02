@@ -1,0 +1,12 @@
+dependencies:
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.1
+- name: mariadb
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.0.1
+- name: postgresql-ha
+  repository: https://charts.bitnami.com/bitnami
+  version: 6.2.0
+digest: sha256:f9e6caf7c67d605f12025aca1184c9bc932e4e523b588a553b304cff7823c472
+generated: "2020-11-24T15:04:50.786022071+01:00"
