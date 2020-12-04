@@ -1,8 +1,10 @@
 revisionHistoryLimit: 3
 replicaCount: 1
 hpa:
-  minReplicas: 1
-  maxReplicas: 1
+  enabled: true
+  replicas:
+    min: 2
+    max: 3
   type: cpu
   metrics:
     utilization:
